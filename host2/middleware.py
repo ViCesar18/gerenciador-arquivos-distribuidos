@@ -17,7 +17,7 @@ def excluir_arquivo():
     return 0
 
 
-server = SimpleXMLRPCServer(("localhost", 8888))
-print("Escutando a porta 8888...")
+server = SimpleXMLRPCServer(("localhost", 8200))
+print("Escutando a porta 8200...")
 server.register_function(listar_arquivos, "listar_arquivos")
 server.serve_forever()
