@@ -5,37 +5,67 @@ import os
 def Union(lista1, lista2, lista3, lista4):
     lista = list(set().union(lista1, lista2, lista3, lista4))
     return lista
+    
+
+def listar_arquivos_middle():
+    return os.listdir(".")
 
 
 def listar_arquivos():
+    files1 = []
     files2 = []
     files3 = []
-    files4 = []
     with xmlrpc.client.ServerProxy("http://localhost:8200/") as proxy:
-        files2 = proxy.listar_arquivos()
+        files2 = proxy.listar_arquivos_middle()
 
     with xmlrpc.client.ServerProxy("http://localhost:8300/") as proxy:
-        files3 = proxy.listar_arquivos()
+        files3 = proxy.listar_arquivos_middle()
 
     with xmlrpc.client.ServerProxy("http://localhost:8400/") as proxy:
-        files4 = proxy.listar_arquivos()
+        files3 = proxy.listar_arquivos_middle()
 
-    return Union(os.listdir("."), files2, files3, files4)
+    return Union(os.listdir("."), files1, files2, files3)
 
 
 def criar_arquivo():
     return 0
 
 
-def renomear_arquivo():
-    return 0
+def renomear_arquivo_middle(nomeAntigo, novoNome):
+    os.rename(nomeAntigo, novoNome)
+
+
+def renomear_arquivo(nomeAntigo, novoNome):
+    with xmlrpc.client.ServerProxy("http://localhost:8200/") as proxy:
+        files = proxy.listar_arquivos_middle()
+
+        for file in files:
+            if(file == nomeAntigo):
+                proxy.renomear_arquivo_middle(nomeAntigo, novoNome)
+
+    with xmlrpc.client.ServerProxy("http://localhost:8300/") as proxy:
+        files = proxy.listar_arquivos_middle()
+
+        for file in files:
+            if(file == nomeAntigo):
+                proxy.renomear_arquivo_middle(nomeAntigo, novoNome)
+
+    with xmlrpc.client.ServerProxy("http://localhost:8400/") as proxy:
+        files = proxy.listar_arquivos_middle()
+
+        for file in files:
+            if(file == nomeAntigo):
+                proxy.renomear_arquivo_middle(nomeAntigo, novoNome)
 
 
 def excluir_arquivo():
     return 0
 
 
-server = SimpleXMLRPCServer(("localhost", 8100))
+server = SimpleXMLRPCServer(("0.0.0.0", 8100), allow_none=True)
 print("Escutando a porta 8100...")
 server.register_function(listar_arquivos, "listar_arquivos")
+server.register_function(listar_arquivos_middle, "listar_arquivos_middle")
+server.register_function(renomear_arquivo, "renomear_arquivo")
+server.register_function(renomear_arquivo_middle, "renomear_arquivo_middle")
 server.serve_forever()
