@@ -2,7 +2,15 @@ import xmlrpc.client
 
 def listar():
     with xmlrpc.client.ServerProxy("http://localhost:8100/") as proxy:
-        print(proxy.listar_arquivos())
+        YELLOW = "\033[0;33m"
+        END_COLOR = "\033[m"
+        arquivos = proxy.listar_arquivos()
+
+        if arquivos != None:
+            print()
+            for nome_arquivo in arquivos:
+                print(YELLOW + nome_arquivo + END_COLOR)
+            print()
 
 
 def renomear(nome_antigo, nome_novo):

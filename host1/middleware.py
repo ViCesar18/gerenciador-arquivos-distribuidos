@@ -100,15 +100,21 @@ def excluir_arquivo(nome_arquivo):
                     proxy.excluir_arquivo_middle(nome_arquivo)
 
 
-print("Forneca o IP:PORT deste Middleware ->\n")
-IP = input("IP Deste Middleware -> ")
-PORT = int(input("Porta Deste Middleware -> "))
+BLUE_YELLOW   = "\033[1;33;44m"  
+RED  = "\033[1;31m"
+CYAN  = "\033[1;36m"
+GREEN = "\033[1;32m"
+END_COLOR = "\033[m"
 
-print("\nFornaca o IP:PORT dos outros Middlewares com o Formato IP:PORTA ->")
-print("Exemplo -> 127.0.0.1:8000\n")
-addr1 = input("Middleware 1 -> ")
-addr2 = input("Middleware 2 -> ")
-addr3 = input("Middleware 3 -> ")
+print(BLUE_YELLOW + "Forneca o IP:PORT deste Middleware ->\n" + END_COLOR)
+IP = input(CYAN + "IP Deste Middleware -> " + END_COLOR)
+PORT = int(input(CYAN + "Porta Deste Middleware -> " + END_COLOR))
+
+print(BLUE_YELLOW + "\nFornaca o IP:PORT dos outros Middlewares com o Formato IP:PORTA ->" + END_COLOR)
+print(GREEN + "Exemplo -> 127.0.0.1:8000\n" + END_COLOR)
+addr1 = input(CYAN + "Middleware 1 -> " + END_COLOR)
+addr2 = input(CYAN + "Middleware 2 -> " + END_COLOR)
+addr3 = input(CYAN + "Middleware 3 -> " + END_COLOR)
 
 MIDDLEWARE_1 = "http://" + addr1
 MIDDLEWARE_2 = "http://" + addr2
@@ -117,7 +123,7 @@ MIDDLEWARE_3 = "http://" + addr3
 MIDDLE_LIST = [MIDDLEWARE_1, MIDDLEWARE_2, MIDDLEWARE_3]
 
 server = SimpleXMLRPCServer((IP, PORT), allow_none=True)
-print(f"Escutando a porta {PORT}...")
+print(RED + f"\nEscutando a porta {PORT}..." + END_COLOR)
 server.register_function(listar_arquivos, "listar_arquivos")
 server.register_function(listar_arquivos_middle, "listar_arquivos_middle")
 server.register_function(buscar_tamanho_diretorio, "buscar_tamanho_diretorio")
