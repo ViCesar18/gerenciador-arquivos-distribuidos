@@ -13,19 +13,13 @@ def listar_arquivos_middle():
 
 
 def listar_arquivos():
-    files1 = []
-    files2 = []
-    files3 = []
-    with xmlrpc.client.ServerProxy("http://localhost:8100/") as proxy:
-        files2 = proxy.listar_arquivos_middle()
+    arquivos = []
 
-    with xmlrpc.client.ServerProxy("http://localhost:8200/") as proxy:
-        files3 = proxy.listar_arquivos_middle()
+    for middle_addr in MIDDLE_LIST:
+        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+            arquivos += proxy.listar_arquivos_middle()
 
-    with xmlrpc.client.ServerProxy("http://localhost:8300/") as proxy:
-        files3 = proxy.listar_arquivos_middle()
-
-    return Union(os.listdir("./dir"), files1, files2, files3)
+    return list(set().union(listar_arquivos_middle(), arquivos))
 
 
 def buscar_tamanho_diretorio():
@@ -45,31 +39,26 @@ def criar_arquivo_middle(nome_arquivo):
 
 
 def criar_arquivo(nome_arquivo):
-    tamanho1 = buscar_tamanho_diretorio()
-    tamanho2 = 0
-    tamanho3 = 0
-    tamanho4 = 0
+    lista_tamanhos = [{
+        "middle_addr": "",
+        "tamanho": buscar_tamanho_diretorio()
+    }]
 
-    with xmlrpc.client.ServerProxy("http://localhost:8100/") as proxy:
-        tamanho2 = proxy.buscar_tamanho_diretorio()
+    for middle_addr in MIDDLE_LIST:
+        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+            lista_tamanhos.append({
+                "middle_addr": middle_addr,
+                "tamanho": proxy.buscar_tamanho_diretorio()
+            })
 
-    with xmlrpc.client.ServerProxy("http://localhost:8200/") as proxy:
-        tamanho3 = proxy.buscar_tamanho_diretorio()
+    lista_tamanhos = sorted(lista_tamanhos, key = lambda i: i["tamanho"])
 
-    with xmlrpc.client.ServerProxy("http://localhost:8300/") as proxy:
-        tamanho4 = proxy.buscar_tamanho_diretorio()
-
-    lista_tamanhos = [tamanho1, tamanho2, tamanho3, tamanho4]
-    maior_tamanho = max(lista_tamanhos)
-
-    if tamanho1 == maior_tamanho:
-        lista_tamanhos.remove(maior_tamanho)
-        criar_arquivo_middle(nome_arquivo)
-        
-        segundo_tamanho_max = max(lista_tamanhos)
-        if tamanho2 == segundo_tamanho_max:
-            with xmlrpc.client.ServerProxy("http://localhost:8100/") as proxy:
-                tamanho2 = proxy.criar_arquivo_middle(nome_arquivo) 
+    for i in range(2):
+        if lista_tamanhos[i]["middle_addr"] == "":
+            criar_arquivo_middle(nome_arquivo)
+        else:
+            with xmlrpc.client.ServerProxy(lista_tamanhos[i]["middle_addr"]) as proxy:
+                proxy.criar_arquivo_middle(nome_arquivo)
 
 
 def renomear_arquivo_middle(nome_antigo, nome_novo):
@@ -83,26 +72,13 @@ def renomear_arquivo(nome_antigo, nome_novo):
         if file == nome_antigo:
             renomear_arquivo_middle(nome_antigo, nome_novo)
 
-    with xmlrpc.client.ServerProxy("http://localhost:8100/") as proxy:
-        files = proxy.listar_arquivos_middle()
+    for middle_addr in MIDDLE_LIST:
+        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+            files = proxy.listar_arquivos_middle()
 
-        for file in files:
-            if file == nome_antigo:
-                proxy.renomear_arquivo_middle(nome_antigo, nome_novo)
-
-    with xmlrpc.client.ServerProxy("http://localhost:8200/") as proxy:
-        files = proxy.listar_arquivos_middle()
-
-        for file in files:
-            if file == nome_antigo:
-                proxy.renomear_arquivo_middle(nome_antigo, nome_novo)
-
-    with xmlrpc.client.ServerProxy("http://localhost:8300/") as proxy:
-        files = proxy.listar_arquivos_middle()
-
-        for file in files:
-            if file == nome_antigo:
-                proxy.renomear_arquivo_middle(nome_antigo, nome_novo)
+            for file in files:
+                if file == nome_antigo:
+                    proxy.renomear_arquivo_middle(nome_antigo, nome_novo)
 
 
 def excluir_arquivo_middle(nome_arquivo):
@@ -115,30 +91,33 @@ def excluir_arquivo(nome_arquivo):
         if file == nome_arquivo:
             excluir_arquivo_middle(nome_arquivo)
 
-    with xmlrpc.client.ServerProxy("http://localhost:8100/") as proxy:
-        files = proxy.listar_arquivos_middle()
+    for middle_addr in MIDDLE_LIST:
+        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+            files = proxy.listar_arquivos_middle()
 
-        for file in files:
-            if file == nome_arquivo:
-                proxy.excluir_arquivo_middle(nome_arquivo)
-
-    with xmlrpc.client.ServerProxy("http://localhost:8200/") as proxy:
-        files = proxy.listar_arquivos_middle()
-
-        for file in files:
-            if file == nome_arquivo:
-                proxy.excluir_arquivo_middle(nome_arquivo)
-
-    with xmlrpc.client.ServerProxy("http://localhost:8300/") as proxy:
-        files = proxy.listar_arquivos_middle()
-
-        for file in files:
-            if file == nome_arquivo:
-                proxy.excluir_arquivo_middle(nome_arquivo)
+            for file in files:
+                if file == nome_arquivo:
+                    proxy.excluir_arquivo_middle(nome_arquivo)
 
 
-server = SimpleXMLRPCServer(("0.0.0.0", 8400), allow_none=True)
-print("Escutando a porta 8400...")
+print("Forneca o IP:PORT deste Middleware ->\n")
+IP = input("IP Deste Middleware -> ")
+PORT = int(input("Porta Deste Middleware -> "))
+
+print("\nFornaca o IP:PORT dos outros Middlewares com o Formato IP:PORTA ->")
+print("Exemplo -> 127.0.0.1:8000\n")
+addr1 = input("Middleware 1 -> ")
+addr2 = input("Middleware 2 -> ")
+addr3 = input("Middleware 3 -> ")
+
+MIDDLEWARE_1 = "http://" + addr1
+MIDDLEWARE_2 = "http://" + addr2
+MIDDLEWARE_3 = "http://" + addr3
+
+MIDDLE_LIST = [MIDDLEWARE_1, MIDDLEWARE_2, MIDDLEWARE_3]
+
+server = SimpleXMLRPCServer((IP, PORT), allow_none=True)
+print(f"Escutando a porta {PORT}...")
 server.register_function(listar_arquivos, "listar_arquivos")
 server.register_function(listar_arquivos_middle, "listar_arquivos_middle")
 server.register_function(buscar_tamanho_diretorio, "buscar_tamanho_diretorio")
