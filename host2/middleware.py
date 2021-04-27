@@ -2,12 +2,7 @@ from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
 import shutil
 import os
-
-def Union(lista1, lista2, lista3, lista4):
-    lista = list(set().union(lista1, lista2, lista3, lista4))
-    return lista
     
-
 def listar_arquivos_middle():
     return os.listdir("./dir")
 
