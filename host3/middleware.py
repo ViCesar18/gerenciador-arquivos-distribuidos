@@ -175,8 +175,8 @@ MIDDLEWARE_3 = "http://" + addr3
 
 MIDDLE_LIST = [MIDDLEWARE_1, MIDDLEWARE_2, MIDDLEWARE_3]
 
-server = SimpleXMLRPCServer(("localhost", 8100), allow_none=True)
-print(RED + f"\nEscutando a porta {8100}..." + END_COLOR)
+server = SimpleXMLRPCServer((IP, PORT), allow_none=True)
+print(RED + f"\nEscutando a porta {PORT}..." + END_COLOR)
 
 server.register_function(retorna_arquivo_ocupado, "retorna_arquivo_ocupado")
 server.register_function(listar_arquivos, "listar_arquivos")
