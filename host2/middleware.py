@@ -2,7 +2,6 @@ from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
 import shutil
 import os
-import time
     
 arquivo_ocupado = False
 
@@ -20,9 +19,13 @@ def exclusao_mutua():
     print("Entrou na exclusao")
     while n_arquivos_ocupados != 0:
         n_arquivos_ocupados = 0
+
         for middle_addr in MIDDLE_LIST:
-            with xmlrpc.client.ServerProxy(middle_addr) as proxy:
-                n_arquivos_ocupados += proxy.retorna_arquivo_ocupado()
+            try:
+                with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+                    n_arquivos_ocupados += proxy.retorna_arquivo_ocupado()
+            except:
+                print(RED + f"O middleware {middle_addr} está offline!" + END_COLOR)
 
     print("Saiu da exclusao")
 
@@ -37,8 +40,11 @@ def listar_arquivos():
     exclusao_mutua()
 
     for middle_addr in MIDDLE_LIST:
-        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
-            arquivos += proxy.listar_arquivos_middle()
+        try:
+            with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+                arquivos += proxy.listar_arquivos_middle()
+        except:
+            print(RED + f"O middleware {middle_addr} está offline!" + END_COLOR)
 
     return list(set().union(listar_arquivos_middle(), arquivos))
 
@@ -68,20 +74,26 @@ def criar_arquivo(nome_arquivo):
     }]
 
     for middle_addr in MIDDLE_LIST:
-        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
-            lista_tamanhos.append({
-                "middle_addr": middle_addr,
-                "tamanho": proxy.buscar_tamanho_diretorio()
-            })
+        try:
+            with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+                lista_tamanhos.append({
+                    "middle_addr": middle_addr,
+                    "tamanho": proxy.buscar_tamanho_diretorio()
+                })
+        except:
+            print(RED + f"O middleware {middle_addr} está offline!" + END_COLOR)
 
     lista_tamanhos = sorted(lista_tamanhos, key = lambda i: i["tamanho"])
 
-    for i in range(2):
-        if lista_tamanhos[i]["middle_addr"] == "":
-            criar_arquivo_middle(nome_arquivo)
-        else:
-            with xmlrpc.client.ServerProxy(lista_tamanhos[i]["middle_addr"]) as proxy:
-                proxy.criar_arquivo_middle(nome_arquivo)
+    if len(lista_tamanhos) >= 2:
+        for i in range(2):
+            if lista_tamanhos[i]["middle_addr"] == "":
+                criar_arquivo_middle(nome_arquivo)
+            else:
+                with xmlrpc.client.ServerProxy(lista_tamanhos[i]["middle_addr"]) as proxy:
+                    proxy.criar_arquivo_middle(nome_arquivo)
+    else:
+        print(RED + f"APENAS UM MIDDLEWARE ESTÁ ONLINE!" + END_COLOR)
 
 
 def renomear_arquivo_middle(nome_antigo, nome_novo):
@@ -100,14 +112,15 @@ def renomear_arquivo(nome_antigo, nome_novo):
             renomear_arquivo_middle(nome_antigo, nome_novo)
 
     for middle_addr in MIDDLE_LIST:
-        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
-            files = proxy.listar_arquivos_middle()
+        try:
+            with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+                files = proxy.listar_arquivos_middle()
 
-            for file in files:
-                if file == nome_antigo:
-                    proxy.renomear_arquivo_middle(nome_antigo, nome_novo)
-
-    time.sleep(60)
+                for file in files:
+                    if file == nome_antigo:
+                        proxy.renomear_arquivo_middle(nome_antigo, nome_novo)
+        except:
+            print(RED + f"O middleware {middle_addr} está offline!" + END_COLOR)
 
     arquivo_ocupado = False
 
@@ -127,12 +140,15 @@ def excluir_arquivo(nome_arquivo):
             excluir_arquivo_middle(nome_arquivo)
 
     for middle_addr in MIDDLE_LIST:
-        with xmlrpc.client.ServerProxy(middle_addr) as proxy:
-            files = proxy.listar_arquivos_middle()
+        try:
+            with xmlrpc.client.ServerProxy(middle_addr) as proxy:
+                files = proxy.listar_arquivos_middle()
 
-            for file in files:
-                if file == nome_arquivo:
-                    proxy.excluir_arquivo_middle(nome_arquivo)
+                for file in files:
+                    if file == nome_arquivo:
+                        proxy.excluir_arquivo_middle(nome_arquivo)
+        except:
+            print(RED + f"O middleware {middle_addr} está offline!" + END_COLOR)
 
     arquivo_ocupado = False
 
@@ -143,7 +159,7 @@ CYAN  = "\033[1;36m"
 GREEN = "\033[1;32m"
 END_COLOR = "\033[m"
 
-""" print(BLUE_YELLOW + "Forneca o IP:PORT deste Middleware ->\n" + END_COLOR)
+print(BLUE_YELLOW + "Forneca o IP:PORT deste Middleware ->\n" + END_COLOR)
 IP = input(CYAN + "IP Deste Middleware -> " + END_COLOR)
 PORT = int(input(CYAN + "Porta Deste Middleware -> " + END_COLOR))
 
@@ -151,20 +167,16 @@ print(BLUE_YELLOW + "\nFornaca o IP:PORT dos outros Middlewares com o Formato IP
 print(GREEN + "Exemplo -> 127.0.0.1:8000\n" + END_COLOR)
 addr1 = input(CYAN + "Middleware 1 -> " + END_COLOR)
 addr2 = input(CYAN + "Middleware 2 -> " + END_COLOR)
-addr3 = input(CYAN + "Middleware 3 -> " + END_COLOR) """
+addr3 = input(CYAN + "Middleware 3 -> " + END_COLOR)
 
-""" MIDDLEWARE_1 = "http://" + addr1
+MIDDLEWARE_1 = "http://" + addr1
 MIDDLEWARE_2 = "http://" + addr2
-MIDDLEWARE_3 = "http://" + addr3 """
-
-MIDDLEWARE_1 = "http://localhost:8100"
-MIDDLEWARE_2 = "http://localhost:8300"
-MIDDLEWARE_3 = "http://localhost:8400"
+MIDDLEWARE_3 = "http://" + addr3
 
 MIDDLE_LIST = [MIDDLEWARE_1, MIDDLEWARE_2, MIDDLEWARE_3]
 
-server = SimpleXMLRPCServer(("localhost", 8200), allow_none=True)
-print(RED + f"\nEscutando a porta {8200}..." + END_COLOR)
+server = SimpleXMLRPCServer(("localhost", 8100), allow_none=True)
+print(RED + f"\nEscutando a porta {8100}..." + END_COLOR)
 
 server.register_function(retorna_arquivo_ocupado, "retorna_arquivo_ocupado")
 server.register_function(listar_arquivos, "listar_arquivos")
